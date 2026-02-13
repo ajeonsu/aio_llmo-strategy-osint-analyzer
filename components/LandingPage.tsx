@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 export const LandingPage: React.FC = () => {
-  const { signInWithGoogle, signInWithEmailPassword, signUpWithEmailPassword } = useAuth();
+  const { signInWithGoogle, signIn, signUp } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,9 +16,9 @@ export const LandingPage: React.FC = () => {
 
     try {
       if (isSignUp) {
-        await signUpWithEmailPassword(email, password);
+        await signUp(email, password);
       } else {
-        await signInWithEmailPassword(email, password);
+        await signIn(email, password);
       }
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
