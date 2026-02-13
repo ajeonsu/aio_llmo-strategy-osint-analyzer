@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react';
 import Header from './components/Header';
 import InputForm from './components/InputForm';
 import AnalysisReport from './components/AnalysisReport';
-import AuthModal from './components/AuthModal';
+import { LandingPage } from './components/LandingPage';
 import { AnalysisInput } from './types';
 import { runAioAnalysis } from './services/geminiService';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -12,45 +12,38 @@ const AppContent: React.FC = () => {
   const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const { user, signOut, getAuthToken } = useAuth();
+  const { currentUser, signOut } = useAuth();
 
   const handleAnalysisSubmit = useCallback(async (input: AnalysisInput) => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const token = await getAuthToken();
+      const token = await currentUser?.getIdToken();
       if (!token) {
-        throw new Error('認証トークンの取得に失敗しました。');
+        throw new Error('Authentication token is required.');
       }
 
       const markdown = await runAioAnalysis(input, token);
       setResult(markdown);
     } catch (err: any) {
       console.error(err);
-      if (err.message.includes('Unauthorized')) {
-        setError('ログインが必要です。再度ログインしてください。');
-        setShowAuthModal(true);
-      } else {
-        setError(err.message || '分析中にエラーが発生しました。バックエンドAPIへの接続を確認してください。');
-      }
+      setError(err.message || 'An error occurred during analysis. Please check your backend API connection.');
     } finally {
       setLoading(false);
     }
-  }, [user, getAuthToken]);
+  }, [currentUser]);
+
+  // Show landing page if user is not logged in
+  if (!currentUser) {
+    return <LandingPage />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <Header 
-        user={user} 
-        onSignIn={() => setShowAuthModal(true)} 
+        user={currentUser} 
         onSignOut={signOut} 
       />
       
@@ -108,8 +101,6 @@ const AppContent: React.FC = () => {
           <p className="text-sm">© 2025 AI Search Strategy Studio. このツールは公開情報のみを使用して分析を行っています。</p>
         </div>
       </footer>
-
-      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>
   );
 };
