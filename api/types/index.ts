@@ -13,6 +13,8 @@ export interface AnalysisResult {
   input: AnalysisInput;
   result: string;
   timestamp: number;
+  userId?: string;
+  userEmail?: string;
 }
 
 export interface ApiResponse<T> {

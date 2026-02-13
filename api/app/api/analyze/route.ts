@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyzeWithGemini } from '@/lib/gemini';
 import { getDb } from '@/lib/firebase-admin';
+import { verifyAuthToken, unauthorizedResponse } from '@/lib/auth';
 import { AnalysisInput, ApiResponse, AnalysisResult } from '@/types';
 
 export const runtime = 'nodejs';
@@ -8,6 +9,12 @@ export const maxDuration = 60; // 60 seconds for Vercel Pro
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication
+    const user = await verifyAuthToken(request);
+    if (!user) {
+      return unauthorizedResponse();
+    }
+
     const body: AnalysisInput = await request.json();
 
     // Validate input
@@ -29,7 +36,7 @@ export async function POST(request: NextRequest) {
       body.extraNotes
     );
 
-    // Save to Firebase (optional - continues even if Firebase fails)
+    // Save to Firebase with user ID
     let analysisId = `analysis_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     try {
@@ -39,6 +46,8 @@ export async function POST(request: NextRequest) {
         input: body,
         result: analysisText,
         timestamp: Date.now(),
+        userId: user.uid, // Add user ID
+        userEmail: user.email,
       };
 
       await db.collection('analyses').doc(analysisId).set(analysisData);

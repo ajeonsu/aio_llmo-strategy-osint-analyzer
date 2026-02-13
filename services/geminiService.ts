@@ -1,12 +1,13 @@
 import { AnalysisInput } from "../types";
 import { ENV } from "../config";
 
-export const runAioAnalysis = async (input: AnalysisInput): Promise<string> => {
+export const runAioAnalysis = async (input: AnalysisInput, authToken: string): Promise<string> => {
   try {
     const response = await fetch(`${ENV.API_URL}/api/analyze`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`,
       },
       body: JSON.stringify(input),
     });
@@ -30,14 +31,15 @@ export const runAioAnalysis = async (input: AnalysisInput): Promise<string> => {
 };
 
 // Optional: Fetch analysis history
-export const fetchAnalysisHistory = async (limit: number = 10, offset: number = 0) => {
+export const fetchAnalysisHistory = async (authToken: string, limit: number = 10) => {
   try {
     const response = await fetch(
-      `${ENV.API_URL}/api/history?limit=${limit}&offset=${offset}`,
+      `${ENV.API_URL}/api/history?limit=${limit}`,
       {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
         },
       }
     );
@@ -55,12 +57,13 @@ export const fetchAnalysisHistory = async (limit: number = 10, offset: number = 
 };
 
 // Optional: Get specific analysis by ID
-export const getAnalysisById = async (id: string) => {
+export const getAnalysisById = async (id: string, authToken: string) => {
   try {
     const response = await fetch(`${ENV.API_URL}/api/analysis/${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`,
       },
     });
 

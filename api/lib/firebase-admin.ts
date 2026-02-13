@@ -1,5 +1,6 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -50,4 +51,9 @@ export const initializeFirebaseAdmin = () => {
 export const getDb = () => {
   initializeFirebaseAdmin();
   return getFirestore();
+};
+
+export const getAuth = () => {
+  initializeFirebaseAdmin();
+  return getAdminAuth();
 };

@@ -3,33 +3,56 @@ import React, { useState, useCallback } from 'react';
 import Header from './components/Header';
 import InputForm from './components/InputForm';
 import AnalysisReport from './components/AnalysisReport';
+import AuthModal from './components/AuthModal';
 import { AnalysisInput } from './types';
 import { runAioAnalysis } from './services/geminiService';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { user, signOut, getAuthToken } = useAuth();
 
   const handleAnalysisSubmit = useCallback(async (input: AnalysisInput) => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const markdown = await runAioAnalysis(input);
+      const token = await getAuthToken();
+      if (!token) {
+        throw new Error('認証トークンの取得に失敗しました。');
+      }
+
+      const markdown = await runAioAnalysis(input, token);
       setResult(markdown);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || '分析中にエラーが発生しました。バックエンドAPIへの接続を確認してください。');
+      if (err.message.includes('Unauthorized')) {
+        setError('ログインが必要です。再度ログインしてください。');
+        setShowAuthModal(true);
+      } else {
+        setError(err.message || '分析中にエラーが発生しました。バックエンドAPIへの接続を確認してください。');
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user, getAuthToken]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <Header />
+      <Header 
+        user={user} 
+        onSignIn={() => setShowAuthModal(true)} 
+        onSignOut={signOut} 
+      />
       
       <main className="container mx-auto px-4 py-10 max-w-5xl">
         {!result && (
@@ -85,7 +108,17 @@ const App: React.FC = () => {
           <p className="text-sm">© 2025 AI Search Strategy Studio. このツールは公開情報のみを使用して分析を行っています。</p>
         </div>
       </footer>
+
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };
 

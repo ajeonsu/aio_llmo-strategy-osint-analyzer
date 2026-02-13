@@ -1,21 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/firebase-admin';
+import { verifyAuthToken, unauthorizedResponse } from '@/lib/auth';
 import { ApiResponse, AnalysisResult } from '@/types';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   try {
+    // Verify authentication
+    const user = await verifyAuthToken(request);
+    if (!user) {
+      return unauthorizedResponse();
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const limit = parseInt(searchParams.get('limit') || '10', 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     const db = getDb();
     const snapshot = await db
       .collection('analyses')
+      .where('userId', '==', user.uid) // Only get user's own analyses
       .orderBy('timestamp', 'desc')
       .limit(limit)
-      .offset(offset)
       .get();
 
     const analyses: AnalysisResult[] = [];
