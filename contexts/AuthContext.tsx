@@ -41,6 +41,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Prevent double initialization (React StrictMode in dev)
     if (isInitializing || hasInitialized) {
       console.log('⚠️ Auth already initialized, skipping...');
+      setLoading(false); // Important: set loading to false even when skipping!
       return;
     }
 
