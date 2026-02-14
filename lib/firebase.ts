@@ -1,8 +1,8 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCth40rGzj1u0qtcxan18C2PsIsAn30izA",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDZhpCypvu-Jqpne8Fr_kfmRz36r9Ik_Ys",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "aio-llmo-analyzer.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "aio-llmo-analyzer",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "aio-llmo-analyzer.firebasestorage.app",
@@ -14,6 +14,12 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 export const auth = getAuth(app);
+
+// Set auth persistence to LOCAL (stays logged in even after closing browser)
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.error('Failed to set auth persistence:', error);
+});
+
 export const googleProvider = new GoogleAuthProvider();
 
 export default app;
