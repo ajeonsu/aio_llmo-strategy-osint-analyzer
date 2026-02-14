@@ -35,14 +35,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check for redirect result first
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result) {
+          console.log('Redirect sign-in successful:', result.user.email);
+          setUser(result.user);
+          setLoading(false);
+        }
+      })
+      .catch((error) => {
+        console.error('Redirect sign-in error:', error);
+        setLoading(false);
+      });
+
+    // Then set up auth state listener
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('Auth state changed:', user?.email || 'No user');
       setUser(user);
       setLoading(false);
-    });
-
-    // Handle redirect result
-    getRedirectResult(auth).catch((error) => {
-      console.error('Redirect sign-in error:', error);
     });
 
     return unsubscribe;
