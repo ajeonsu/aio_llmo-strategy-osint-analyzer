@@ -39,19 +39,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // First check for redirect result, then set up the listener
     const initAuth = async () => {
+      console.log('🔍 Initializing auth...');
       try {
         // Wait for redirect result first
         const result = await getRedirectResult(auth);
         if (result) {
-          console.log('✅ Redirect sign-in successful:', result.user.email);
+          console.log('✅ Redirect sign-in successful!');
+          console.log('   User:', result.user.email);
+          console.log('   UID:', result.user.uid);
+        } else {
+          console.log('ℹ️ No redirect result (normal page load)');
         }
-      } catch (error) {
-        console.error('❌ Redirect sign-in error:', error);
+      } catch (error: any) {
+        console.error('❌ Redirect sign-in error:', error.code, error.message);
       }
 
       // AFTER checking redirect, set up auth state listener
       unsubscribe = onAuthStateChanged(auth, (user) => {
-        console.log('🔄 Auth state changed:', user?.email || 'No user');
+        if (user) {
+          console.log('🔄 Auth state: LOGGED IN');
+          console.log('   Email:', user.email);
+          console.log('   UID:', user.uid);
+        } else {
+          console.log('🔄 Auth state: NOT LOGGED IN');
+        }
         setUser(user);
         setLoading(false);
       });

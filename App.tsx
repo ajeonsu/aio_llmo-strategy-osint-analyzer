@@ -12,7 +12,7 @@ const AppContent: React.FC = () => {
   const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { user, signOut, getAuthToken } = useAuth();
+  const { user, signOut, getAuthToken, loading: authLoading } = useAuth();
 
   const handleAnalysisSubmit = useCallback(async (input: AnalysisInput) => {
     if (!user) {
@@ -43,6 +43,18 @@ const AppContent: React.FC = () => {
       setLoading(false);
     }
   }, [user, getAuthToken]);
+
+  // Show loading while checking auth status
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-lg text-slate-700">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Show landing page if user is not logged in
   if (!user) {
