@@ -12,38 +12,47 @@ const AppContent: React.FC = () => {
   const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { currentUser, signOut } = useAuth();
+  const { user, signOut, getAuthToken } = useAuth();
 
   const handleAnalysisSubmit = useCallback(async (input: AnalysisInput) => {
+    if (!user) {
+      setError('ログインが必要です。');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const token = await currentUser?.getIdToken();
+      const token = await getAuthToken();
       if (!token) {
-        throw new Error('Authentication token is required.');
+        throw new Error('認証トークンの取得に失敗しました。');
       }
 
       const markdown = await runAioAnalysis(input, token);
       setResult(markdown);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'An error occurred during analysis. Please check your backend API connection.');
+      if (err.message.includes('Unauthorized')) {
+        setError('ログインが必要です。再度ログインしてください。');
+      } else {
+        setError(err.message || '分析中にエラーが発生しました。バックエンドAPIへの接続を確認してください。');
+      }
     } finally {
       setLoading(false);
     }
-  }, [currentUser]);
+  }, [user, getAuthToken]);
 
   // Show landing page if user is not logged in
-  if (!currentUser) {
+  if (!user) {
     return <LandingPage />;
   }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <Header 
-        user={currentUser} 
+        user={user} 
         onSignOut={signOut} 
       />
       
