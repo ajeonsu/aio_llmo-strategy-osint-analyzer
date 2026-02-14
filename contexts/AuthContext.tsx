@@ -3,8 +3,7 @@ import {
   User,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   signOut as firebaseSignOut,
   onAuthStateChanged,
 } from 'firebase/auth';
@@ -39,54 +38,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let unsubscribe: () => void;
+    // Prevent double initialization (React StrictMode in dev)
+    if (isInitializing || hasInitialized) {
+      console.log('⚠️ Auth already initialized, skipping...');
+      return;
+    }
 
-    // First check for redirect result, then set up the listener
-    const initAuth = async () => {
-      // Prevent double initialization (React StrictMode in dev)
-      if (isInitializing || hasInitialized) {
-        console.log('⚠️ Auth already initialized, skipping...');
-        return;
+    isInitializing = true;
+    console.log('🔍 Setting up auth listener...');
+
+    // Set up auth state listener
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log('✅ User is logged in');
+        console.log('   Email:', user.email);
+        console.log('   UID:', user.uid);
+      } else {
+        console.log('ℹ️ No user logged in');
       }
+      setUser(user);
+      setLoading(false);
+    });
 
-      isInitializing = true;
-      console.log('🔍 Initializing auth...');
-      
-      try {
-        // Wait for redirect result first
-        const result = await getRedirectResult(auth);
-        if (result) {
-          console.log('✅ Redirect sign-in successful!');
-          console.log('   User:', result.user.email);
-          console.log('   UID:', result.user.uid);
-        } else {
-          console.log('ℹ️ No redirect result (normal page load)');
-        }
-      } catch (error: any) {
-        console.error('❌ Redirect sign-in error:', error.code, error.message);
-      }
-
-      // AFTER checking redirect, set up auth state listener
-      unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user) {
-          console.log('🔄 Auth state: LOGGED IN');
-          console.log('   Email:', user.email);
-          console.log('   UID:', user.uid);
-        } else {
-          console.log('🔄 Auth state: NOT LOGGED IN');
-        }
-        setUser(user);
-        setLoading(false);
-      });
-
-      hasInitialized = true;
-      isInitializing = false;
-    };
-
-    initAuth();
+    hasInitialized = true;
+    isInitializing = false;
 
     return () => {
-      if (unsubscribe) unsubscribe();
+      unsubscribe();
     };
   }, []);
 
@@ -99,7 +77,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const signInWithGoogle = async () => {
-    await signInWithRedirect(auth, googleProvider);
+    try {
+      await signInWithPopup(auth, googleProvider);
+      console.log('✅ Google sign-in successful');
+    } catch (error: any) {
+      console.error('❌ Google sign-in error:', error.code, error.message);
+      throw error;
+    }
   };
 
   const signOut = async () => {
