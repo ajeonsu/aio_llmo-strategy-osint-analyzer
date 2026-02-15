@@ -29,31 +29,16 @@ export const useAuth = () => {
   return context;
 };
 
-// Global flag to prevent double initialization in StrictMode
-let isInitializing = false;
-let hasInitialized = false;
-
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Prevent double initialization (React StrictMode in dev)
-    if (isInitializing || hasInitialized) {
-      setLoading(false);
-      return;
-    }
-
-    isInitializing = true;
-
     // Set up auth state listener
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
     });
-
-    hasInitialized = true;
-    isInitializing = false;
 
     return () => {
       unsubscribe();
