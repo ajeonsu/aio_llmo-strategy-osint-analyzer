@@ -37,7 +37,7 @@ export const analyzeWithGemini = async (
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ 
-    model: 'models/gemini-1.5-pro',
+    model: 'gemini-pro',
   });
 
   const prompt = `
