@@ -37,11 +37,12 @@ export const analyzeWithGemini = async (
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ 
-    model: 'gemini-pro',
-    systemInstruction: SYSTEM_INSTRUCTION,
+    model: 'gemini-1.5-pro-latest',
   });
 
   const prompt = `
+${SYSTEM_INSTRUCTION}
+
 以下の入力情報を踏まえ、AI検索最適化（AIO/LLMO）の戦略分析レポートを作成してください。
 
 分析対象：
