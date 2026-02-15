@@ -40,23 +40,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     // Prevent double initialization (React StrictMode in dev)
     if (isInitializing || hasInitialized) {
-      console.log('⚠️ Auth already initialized, skipping...');
-      setLoading(false); // Important: set loading to false even when skipping!
+      setLoading(false);
       return;
     }
 
     isInitializing = true;
-    console.log('🔍 Setting up auth listener...');
 
     // Set up auth state listener
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log('✅ User is logged in');
-        console.log('   Email:', user.email);
-        console.log('   UID:', user.uid);
-      } else {
-        console.log('ℹ️ No user logged in');
-      }
       setUser(user);
       setLoading(false);
     });
@@ -80,13 +71,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signInWithGoogle = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      console.log('✅ Google sign-in successful');
-      console.log('   User:', result.user.email);
       // Manually update state (sometimes onAuthStateChanged doesn't fire immediately)
       setUser(result.user);
       setLoading(false);
     } catch (error: any) {
-      console.error('❌ Google sign-in error:', error.code, error.message);
       throw error;
     }
   };

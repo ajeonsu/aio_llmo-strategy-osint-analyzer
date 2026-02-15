@@ -19,8 +19,8 @@ const Header: React.FC<HeaderProps> = ({ user, onSignOut }) => {
             </div>
             <div>
               <h1 className="text-xl md:text-2xl font-bold">
-                AI検索・回答最適化 <span className="text-blue-400">戦略分析スタジオ</span>
-              </h1>
+          AI検索・回答最適化 <span className="text-blue-400">戦略分析スタジオ</span>
+        </h1>
             </div>
           </div>
 

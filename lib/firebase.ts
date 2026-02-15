@@ -16,8 +16,8 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0
 export const auth = getAuth(app);
 
 // Set auth persistence to LOCAL (stays logged in even after closing browser)
-setPersistence(auth, browserLocalPersistence).catch((error) => {
-  console.error('Failed to set auth persistence:', error);
+setPersistence(auth, browserLocalPersistence).catch(() => {
+  // Silent fail - persistence is not critical
 });
 
 export const googleProvider = new GoogleAuthProvider();
