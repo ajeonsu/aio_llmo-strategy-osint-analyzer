@@ -9,6 +9,27 @@ export const LandingPage: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // User-friendly error messages in Japanese
+  const getErrorMessage = (errorCode: string): string => {
+    const errorMessages: { [key: string]: string } = {
+      'auth/invalid-email': 'メールアドレスの形式が正しくありません',
+      'auth/user-disabled': 'このアカウントは無効化されています',
+      'auth/user-not-found': 'メールアドレスまたはパスワードが正しくありません',
+      'auth/wrong-password': 'メールアドレスまたはパスワードが正しくありません',
+      'auth/invalid-credential': 'メールアドレスまたはパスワードが正しくありません',
+      'auth/email-already-in-use': 'このメールアドレスは既に使用されています',
+      'auth/weak-password': 'パスワードは6文字以上である必要があります',
+      'auth/operation-not-allowed': '操作が許可されていません',
+      'auth/popup-closed-by-user': 'ログインがキャンセルされました',
+      'auth/cancelled-popup-request': 'ログインがキャンセルされました',
+      'auth/popup-blocked': 'ポップアップがブロックされました。ポップアップを許可してください',
+      'auth/network-request-failed': 'ネットワークエラーが発生しました。接続を確認してください',
+      'auth/too-many-requests': 'リクエストが多すぎます。しばらくしてから再度お試しください',
+    };
+    
+    return errorMessages[errorCode] || '認証エラーが発生しました。もう一度お試しください';
+  };
+
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -21,7 +42,8 @@ export const LandingPage: React.FC = () => {
         await signIn(email, password);
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication failed');
+      const errorCode = err.code || '';
+      setError(getErrorMessage(errorCode));
     } finally {
       setLoading(false);
     }
@@ -33,7 +55,8 @@ export const LandingPage: React.FC = () => {
     try {
       await signInWithGoogle();
     } catch (err: any) {
-      setError(err.message || 'Google sign-in failed');
+      const errorCode = err.code || '';
+      setError(getErrorMessage(errorCode));
     } finally {
       setLoading(false);
     }
@@ -82,14 +105,14 @@ export const LandingPage: React.FC = () => {
             fontSize: '28px',
             fontWeight: '700'
           }}>
-            AI Strategy Analysis Studio
+            AI戦略分析スタジオ
           </h1>
           <p style={{
             margin: 0,
             fontSize: '14px',
             opacity: 0.9
           }}>
-            Optimize your brand for AI-powered search
+            AIを活用した検索最適化であなたのブランドを強化
           </p>
         </div>
 
@@ -102,7 +125,7 @@ export const LandingPage: React.FC = () => {
             color: '#1a202c',
             textAlign: 'center'
           }}>
-            {isSignUp ? 'Create Account' : 'Welcome Back'}
+            {isSignUp ? 'アカウント作成' : 'おかえりなさい'}
           </h2>
 
           {error && (
@@ -128,7 +151,7 @@ export const LandingPage: React.FC = () => {
                 fontWeight: '500',
                 color: '#374151'
               }}>
-                Email Address
+                メールアドレス
               </label>
               <input
                 type="email"
@@ -159,7 +182,7 @@ export const LandingPage: React.FC = () => {
                 fontWeight: '500',
                 color: '#374151'
               }}>
-                Password
+                パスワード
               </label>
               <input
                 type="password"
@@ -187,7 +210,7 @@ export const LandingPage: React.FC = () => {
                   fontSize: '12px',
                   color: '#6b7280'
                 }}>
-                  Must be at least 6 characters
+                  6文字以上である必要があります
                 </p>
               )}
             </div>
@@ -212,7 +235,7 @@ export const LandingPage: React.FC = () => {
               onMouseEnter={(e) => !loading && (e.currentTarget.style.transform = 'translateY(-2px)')}
               onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              {loading ? 'Please wait...' : (isSignUp ? 'Sign Up' : 'Sign In')}
+              {loading ? '処理中...' : (isSignUp ? '新規登録' : 'ログイン')}
             </button>
           </form>
 
@@ -224,7 +247,7 @@ export const LandingPage: React.FC = () => {
             fontSize: '14px'
           }}>
             <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }} />
-            <span style={{ padding: '0 16px' }}>or</span>
+            <span style={{ padding: '0 16px' }}>または</span>
             <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }} />
           </div>
 
@@ -257,7 +280,7 @@ export const LandingPage: React.FC = () => {
               <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/>
               <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z"/>
             </svg>
-            Continue with Google
+            Googleで続ける
           </button>
 
           <div style={{
@@ -265,7 +288,7 @@ export const LandingPage: React.FC = () => {
             fontSize: '14px',
             color: '#6b7280'
           }}>
-            {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+            {isSignUp ? 'アカウントをお持ちですか？' : 'アカウントをお持ちでないですか？'}{' '}
             <button
               onClick={() => {
                 setIsSignUp(!isSignUp);
@@ -283,7 +306,7 @@ export const LandingPage: React.FC = () => {
               onMouseEnter={(e) => e.currentTarget.style.textDecoration = 'underline'}
               onMouseLeave={(e) => e.currentTarget.style.textDecoration = 'none'}
             >
-              {isSignUp ? 'Sign In' : 'Sign Up'}
+              {isSignUp ? 'ログイン' : '新規登録'}
             </button>
           </div>
         </div>

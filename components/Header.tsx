@@ -37,7 +37,7 @@ const Header: React.FC<HeaderProps> = ({ user, onSignOut }) => {
               onClick={onSignOut}
               className="px-4 py-2 text-sm font-medium text-white border border-slate-600 rounded-lg hover:bg-slate-800 transition-colors"
             >
-              Sign Out
+              ログアウト
             </button>
           </div>
         </div>
