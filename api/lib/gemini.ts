@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { scrapeUrls, formatScrapedContent } from './scraper';
 
 const SYSTEM_INSTRUCTION = `
 あなたは、AI検索最適化（AIO/LLMO）戦略の専門コンサルタントです。
@@ -18,6 +19,7 @@ const SYSTEM_INSTRUCTION = `
 - JSON-LD、HTML、プログラムコードなどのコード断片は含めない
 - すべて日本語の自然文で記述
 - 長文・詳細な出力を心がける
+- 提供されたウェブサイトのコンテンツを必ず参照し、実際の企業情報に基づいて分析すること
 `;
 
 export const analyzeWithGemini = async (
@@ -35,6 +37,36 @@ export const analyzeWithGemini = async (
     throw new Error('GEMINI_API_KEY is not configured');
   }
 
+  // Parse and scrape URLs
+  console.log('Starting URL scraping...');
+  const allUrls: string[] = [];
+  
+  // Parse official URLs
+  if (officialUrls) {
+    const urls = officialUrls.split(/[,\n]/).map(u => u.trim()).filter(u => u);
+    allUrls.push(...urls);
+  }
+  
+  // Parse additional URLs
+  if (additionalUrls) {
+    const urls = additionalUrls.split(/[,\n]/).map(u => u.trim()).filter(u => u);
+    allUrls.push(...urls);
+  }
+
+  // Scrape all URLs
+  let scrapedContext = '';
+  if (allUrls.length > 0) {
+    console.log(`Scraping ${allUrls.length} URLs:`, allUrls);
+    try {
+      const scrapedData = await scrapeUrls(allUrls);
+      scrapedContext = formatScrapedContent(scrapedData);
+      console.log(`Successfully scraped content (${scrapedContext.length} characters)`);
+    } catch (scrapeError) {
+      console.error('Error scraping URLs:', scrapeError);
+      scrapedContext = '（URL取得エラー）';
+    }
+  }
+
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ 
     model: 'gemini-2.5-flash',
@@ -44,6 +76,10 @@ export const analyzeWithGemini = async (
 ${SYSTEM_INSTRUCTION}
 
 以下の入力情報を踏まえ、AI検索最適化（AIO/LLMO）の戦略分析レポートを作成してください。
+
+【重要】以下のウェブサイトから取得した実際のコンテンツを必ず参照して分析してください：
+
+${scrapedContext}
 
 分析対象：
 1) 対象ブランド：${brandName}
@@ -55,6 +91,7 @@ ${SYSTEM_INSTRUCTION}
 7) ユーザーからの追加要件：${extraNotes || '特になし'}
 
 【厳守指示】
+- 上記のウェブサイトコンテンツを必ず参照し、実際の企業情報、製品、サービスに基づいて分析してください。
 - 出力は非常に詳細かつ長文で行ってください。
 - **記号「*」や「**」は、文中・箇条書き・強調を含め、一切使用しないでください。**
 - **JSON-LD、HTML、プログラムコード等のコード断片は一切含めないでください。** 素人でも理解できるよう、すべて具体的な日本語の指示・説明として記述してください。
@@ -78,6 +115,7 @@ ${SYSTEM_INSTRUCTION}
       throw new Error('No text generated from Gemini');
     }
 
+    console.log(`Generated analysis: ${text.length} characters`);
     return text;
   } catch (error: any) {
     console.error('Gemini API Error:', error);
