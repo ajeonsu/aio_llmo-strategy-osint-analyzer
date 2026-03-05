@@ -5,7 +5,7 @@ import { verifyAuthToken, unauthorizedResponse } from '@/lib/auth';
 import { AnalysisInput, ApiResponse, AnalysisResult } from '@/types';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60; // 60 seconds for Vercel Pro
+export const maxDuration = 300; // 5 minutes (max for Vercel Pro)
 
 export async function POST(request: NextRequest) {
   try {

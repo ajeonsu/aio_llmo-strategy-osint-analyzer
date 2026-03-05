@@ -20,9 +20,10 @@ export async function scrapeUrl(url: string): Promise<ScrapedContent> {
       throw new Error('Only HTTP/HTTPS URLs are supported');
     }
 
-    // Fetch the page
+    // Fetch the page with shorter timeout
     const response = await axios.get(url, {
-      timeout: 10000,
+      timeout: 5000, // Reduced from 10s to 5s
+      maxRedirects: 3,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -79,9 +80,9 @@ export async function scrapeUrl(url: string): Promise<ScrapedContent> {
       .replace(/\n+/g, '\n') // Replace multiple newlines with single newline
       .trim();
 
-    // Limit content length (max 10000 characters to avoid token limits)
-    if (content.length > 10000) {
-      content = content.substring(0, 10000) + '...';
+    // Limit content length (max 5000 characters to avoid token limits and speed up processing)
+    if (content.length > 5000) {
+      content = content.substring(0, 5000) + '...';
     }
 
     return {
