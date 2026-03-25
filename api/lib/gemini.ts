@@ -59,15 +59,17 @@ export const analyzeWithGemini = async (
     userUrls.push(...urls);
   }
 
-  // If no URLs were provided by the user, run the discovery layer
+  // Always run discovery first to find product/service pages
   let discoveredUrls: string[] = [];
-  if (userUrls.length === 0 && brandName) {
-    console.log(`[Discovery] No URLs provided — searching for product/service pages for "${brandName}"`);
+  if (brandName) {
+    console.log(`[Discovery] Searching for product/service pages for "${brandName}"`);
     discoveredUrls = await discoverProductPages(brandName, 5);
   }
 
-  // Merge user-supplied URLs with discovered URLs, cap total at 5
-  const allUrls = [...userUrls, ...discoveredUrls].slice(0, 5);
+  // Use discovered URLs if found; fall back to user-supplied URLs if discovery returns nothing
+  const allUrls = discoveredUrls.length > 0
+    ? discoveredUrls.slice(0, 5)
+    : userUrls.slice(0, 5);
 
   // Scrape all URLs
   let scrapedContext = '';
