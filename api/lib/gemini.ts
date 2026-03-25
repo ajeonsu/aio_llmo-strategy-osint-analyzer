@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { scrapeUrls, formatScrapedContent } from './scraper';
+import { scrapeWithLinkFollowing, formatScrapedContent } from './scraper';
 import { discoverProductPages } from './discovery';
 
 export interface GeminiAnalysisResult {
@@ -88,12 +88,14 @@ export const analyzeWithGemini = async (
   );
   const allUrls = [...userUrls, ...supplementUrls].slice(0, 5);
 
-  // Scrape all URLs
+  // Scrape seed URLs and follow promising product/service links up to 2 hops deep.
+  // This discovers pages that are hidden behind navigation — e.g. a company front page
+  // that links (via "Service" or an external Notion page) to the actual SaaS product page.
   let scrapedContext = '';
   if (allUrls.length > 0) {
-    console.log(`Scraping ${allUrls.length} URLs:`, allUrls);
+    console.log(`Scraping with link-following from ${allUrls.length} seed URL(s):`, allUrls);
     try {
-      const scrapedData = await scrapeUrls(allUrls);
+      const scrapedData = await scrapeWithLinkFollowing(allUrls, 5, 2);
       scrapedContext = formatScrapedContent(scrapedData);
       console.log(`Successfully scraped content (${scrapedContext.length} characters)`);
     } catch (scrapeError) {
