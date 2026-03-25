@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 // Domains that are clearly not brand product/service pages
+// (last updated: 2026-03-26)
 const BLOCK_LIST_DOMAINS = [
   'wikipedia.org',
   'twitter.com',
