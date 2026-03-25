@@ -45,12 +45,21 @@ interface SerperResponse {
   organic?: SerperResult[];
 }
 
-function generateSearchQueries(brandName: string): string[] {
-  return [
-    `"${brandName}" service features`,
-    `"${brandName}" product SaaS`,
-    `"${brandName}" 機能 サービス`,
-  ];
+function generateSearchQueries(brandName: string, officialDomain?: string): string[] {
+  const queries: string[] = [];
+
+  // Site-specific search first — most accurate when the official domain is known,
+  // avoids confusing generic-sounding brand names (e.g. "on the bakery") with
+  // unrelated businesses in general web results
+  if (officialDomain) {
+    queries.push(`site:${officialDomain} サービス OR product OR features OR 機能`);
+  }
+
+  queries.push(`"${brandName}" service features`);
+  queries.push(`"${brandName}" product SaaS`);
+  queries.push(`"${brandName}" 機能 サービス`);
+
+  return queries;
 }
 
 function isBlockedDomain(url: string): boolean {
@@ -88,12 +97,18 @@ async function searchSerper(query: string): Promise<SerperResult[]> {
 }
 
 /**
- * Discover the most relevant product/service pages for a brand
- * using web search. Returns up to `maxPages` candidate URLs.
- * Returns an empty array if SERPER_API_KEY is not configured.
+ * Discover the most relevant product/service pages for a brand using web
+ * search. When `officialDomain` is provided a site-specific query is added
+ * first so that sub-pages on the known domain are found before general
+ * web results — this prevents generic-sounding brand names from matching
+ * unrelated businesses.
+ *
+ * Returns up to `maxPages` candidate URLs, or an empty array if
+ * SERPER_API_KEY is not configured.
  */
 export async function discoverProductPages(
   brandName: string,
+  officialDomain?: string,
   maxPages = 5
 ): Promise<string[]> {
   const apiKey = process.env.SERPER_API_KEY;
@@ -102,7 +117,7 @@ export async function discoverProductPages(
     return [];
   }
 
-  const queries = generateSearchQueries(brandName);
+  const queries = generateSearchQueries(brandName, officialDomain);
   console.log(`[Discovery] Running ${queries.length} queries for "${brandName}"`);
 
   // Run all queries in parallel

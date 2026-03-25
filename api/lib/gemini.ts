@@ -59,17 +59,34 @@ export const analyzeWithGemini = async (
     userUrls.push(...urls);
   }
 
-  // Always run discovery first to find product/service pages
-  let discoveredUrls: string[] = [];
-  if (brandName) {
-    console.log(`[Discovery] Searching for product/service pages for "${brandName}"`);
-    discoveredUrls = await discoverProductPages(brandName, 5);
+  // Extract domain from the first official URL so discovery can run a
+  // site-specific search — this prevents generic brand names from matching
+  // unrelated businesses in general search results
+  let officialDomain: string | undefined;
+  if (userUrls.length > 0) {
+    try {
+      officialDomain = new URL(userUrls[0]).hostname;
+    } catch {
+      // ignore invalid URLs
+    }
   }
 
-  // Use discovered URLs if found; fall back to user-supplied URLs if discovery returns nothing
-  const allUrls = discoveredUrls.length > 0
-    ? discoveredUrls.slice(0, 5)
-    : userUrls.slice(0, 5);
+  // Always run discovery to find product/service sub-pages
+  let discoveredUrls: string[] = [];
+  if (brandName) {
+    console.log(`[Discovery] Searching for product/service pages for "${brandName}"${officialDomain ? ` (domain: ${officialDomain})` : ''}`);
+    discoveredUrls = await discoverProductPages(brandName, officialDomain, 5);
+  }
+
+  // Merge strategy:
+  // 1. User-provided URLs always come first (they are authoritative)
+  // 2. Fill remaining slots (up to 5 total) with newly discovered pages
+  // 3. If discovery found nothing, only user URLs are used (original behaviour)
+  const seenUrls = new Set(userUrls.map(u => u.toLowerCase().replace(/\/$/, '')));
+  const supplementUrls = discoveredUrls.filter(
+    u => !seenUrls.has(u.toLowerCase().replace(/\/$/, ''))
+  );
+  const allUrls = [...userUrls, ...supplementUrls].slice(0, 5);
 
   // Scrape all URLs
   let scrapedContext = '';
