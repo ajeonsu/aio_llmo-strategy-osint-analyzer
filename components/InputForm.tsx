@@ -64,8 +64,9 @@ const InputForm: React.FC<InputFormProps> = ({ onSubmit, isSubmitting }) => {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-900">公式サイトのURL</label>
+          <label className="text-sm font-bold text-slate-900">公式サイトのURL <span className="text-red-500">*</span></label>
           <textarea
+            required
             name="officialUrls"
             value={formData.officialUrls}
             onChange={handleChange}

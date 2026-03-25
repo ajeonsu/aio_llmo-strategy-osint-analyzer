@@ -25,6 +25,13 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    if (!body.officialUrls || !body.officialUrls.trim()) {
+      return NextResponse.json<ApiResponse<null>>({
+        success: false,
+        error: 'Official website URL is required',
+      }, { status: 400 });
+    }
+
     // Call Gemini API
     const { result: analysisText, discoveredUrls } = await analyzeWithGemini(
       body.brandName,
