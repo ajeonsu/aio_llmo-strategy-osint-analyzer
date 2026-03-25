@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call Gemini API
-    const analysisText = await analyzeWithGemini(
+    const { result: analysisText, discoveredUrls } = await analyzeWithGemini(
       body.brandName,
       body.officialUrls,
       body.additionalUrls,
@@ -46,8 +46,9 @@ export async function POST(request: NextRequest) {
         input: body,
         result: analysisText,
         timestamp: Date.now(),
-        userId: user.uid, // Add user ID
+        userId: user.uid,
         userEmail: user.email,
+        discoveredUrls: discoveredUrls.length > 0 ? discoveredUrls : undefined,
       };
 
       await db.collection('analyses').doc(analysisId).set(analysisData);
@@ -56,11 +57,12 @@ export async function POST(request: NextRequest) {
       console.error('Failed to save to Firebase (continuing anyway):', firebaseError);
     }
 
-    return NextResponse.json<ApiResponse<{ id: string; result: string }>>({
+    return NextResponse.json<ApiResponse<{ id: string; result: string; discoveredUrls: string[] }>>({
       success: true,
       data: {
         id: analysisId,
         result: analysisText,
+        discoveredUrls,
       },
     });
 

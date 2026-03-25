@@ -1,5 +1,11 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { scrapeUrls, formatScrapedContent } from './scraper';
+import { discoverProductPages } from './discovery';
+
+export interface GeminiAnalysisResult {
+  result: string;
+  discoveredUrls: string[];
+}
 
 const SYSTEM_INSTRUCTION = `
 あなたは、AI検索最適化（AIO/LLMO）戦略の専門コンサルタントです。
@@ -30,7 +36,7 @@ export const analyzeWithGemini = async (
   goal: string,
   conditions: string,
   extraNotes: string
-): Promise<string> => {
+): Promise<GeminiAnalysisResult> => {
   const apiKey = process.env.GEMINI_API_KEY;
   
   if (!apiKey) {
@@ -39,19 +45,29 @@ export const analyzeWithGemini = async (
 
   // Parse and scrape URLs
   console.log('Starting URL scraping...');
-  const allUrls: string[] = [];
+  const userUrls: string[] = [];
   
   // Parse official URLs
   if (officialUrls) {
     const urls = officialUrls.split(/[,\n]/).map(u => u.trim()).filter(u => u);
-    allUrls.push(...urls);
+    userUrls.push(...urls);
   }
   
   // Parse additional URLs
   if (additionalUrls) {
     const urls = additionalUrls.split(/[,\n]/).map(u => u.trim()).filter(u => u);
-    allUrls.push(...urls);
+    userUrls.push(...urls);
   }
+
+  // If no URLs were provided by the user, run the discovery layer
+  let discoveredUrls: string[] = [];
+  if (userUrls.length === 0 && brandName) {
+    console.log(`[Discovery] No URLs provided — searching for product/service pages for "${brandName}"`);
+    discoveredUrls = await discoverProductPages(brandName, 5);
+  }
+
+  // Merge user-supplied URLs with discovered URLs, cap total at 5
+  const allUrls = [...userUrls, ...discoveredUrls].slice(0, 5);
 
   // Scrape all URLs
   let scrapedContext = '';
@@ -116,7 +132,7 @@ ${scrapedContext}
     }
 
     console.log(`Generated analysis: ${text.length} characters`);
-    return text;
+    return { result: text, discoveredUrls };
   } catch (error: any) {
     console.error('Gemini API Error:', error);
     throw new Error(`Failed to generate analysis: ${error.message}`);

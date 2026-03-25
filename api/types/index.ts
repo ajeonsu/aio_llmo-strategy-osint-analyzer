@@ -15,6 +15,7 @@ export interface AnalysisResult {
   timestamp: number;
   userId?: string;
   userEmail?: string;
+  discoveredUrls?: string[];
 }
 
 export interface ApiResponse<T> {

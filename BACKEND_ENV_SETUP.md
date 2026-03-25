@@ -53,6 +53,15 @@ Add these variables (select **Production**, **Preview**, and **Development**):
    
    ⚠️ **IMPORTANT**: Paste the entire multi-line private key as-is. Vercel will handle it correctly.
 
+4. **SERPER_API_KEY** *(optional — enables the URL discovery layer)*
+   ```
+   your_serper_api_key_here
+   ```
+   - Sign up at https://serper.dev — free tier includes 2,500 queries
+   - When this key is set, the backend will automatically search for product/service pages
+     for the brand if the user does not supply any URLs manually
+   - If this key is **not** set, the app falls back to user-supplied URLs only (existing behavior)
+
 ## Step 4: Redeploy
 
 After adding the environment variables, redeploy the backend:
